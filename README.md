@@ -34,3 +34,12 @@ You cannot use root to log into database, since root requires sudo. Since you ne
    3. `Enter the database name: sprint`
    4. `Do you want to change the host fom localhost? (y/n): n`
 3. ...
+
+\+ ToDo:
+- Attempt to automate user setup etc.
+- Recommended db setup (ACID)
+  - Change SQL code to transactions, i.e. if db update fails (i.e. YF call) NOTHING should be executed
+- Add logging to db
+  - Checkpoints at each 'stage' of db, i.e.
+    1. Loading YF data
+    2. EF production (might need sub-stages)
