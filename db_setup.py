@@ -2,6 +2,7 @@ import mysql.connector
 from mysql.connector import Error
 
 def db_setup(connection, cursor):
+    # SQL statements to create the necessary tables
     sql_statements = [
         "DROP TABLE IF EXISTS `PortfolioHasAllocation`;",
         "DROP TABLE IF EXISTS `PortfolioHasStock`;",
@@ -26,11 +27,15 @@ def db_setup(connection, cursor):
     ]
 
     try:
+        # Start a new transaction
         connection.start_transaction()
         for sql_statement in sql_statements:
+            # Execute each SQL statement
             cursor.execute(sql_statement)
+        # Commit the transaction
         connection.commit()
         print("SQL script executed successfully.")
     except Error as e:
+        # Rollback the transaction in case of an error
         connection.rollback()
         print(f"Error executing SQL script: {e}")
