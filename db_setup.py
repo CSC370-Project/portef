@@ -3,8 +3,7 @@ from mysql.connector import Error
 
 def db_setup(connection, cursor):
     """
-    Set up the database schema by executing SQL statements.
-    
+    Set up the database schema by executing SQL statements within a transaction.
     Parameters:
     connection (MySQLConnection): MySQL connection object.
     cursor (MySQLCursor): MySQL cursor object to execute SQL queries.
@@ -33,9 +32,11 @@ def db_setup(connection, cursor):
     ]
 
     try:
+        connection.start_transaction()
         for sql_statement in sql_statements:
             cursor.execute(sql_statement)
         connection.commit()
         print("SQL script executed successfully.")
     except Error as e:
+        connection.rollback()
         print(f"Error executing SQL script: {e}")

@@ -5,7 +5,6 @@ import getpass
 def connect_to_database():
     """
     Connect to the MySQL database based on user input.
-    
     Returns:
     tuple: MySQL connection and cursor objects.
     """
@@ -42,7 +41,6 @@ def connect_to_database():
 def close_connection(connection, cursor):
     """
     Close the MySQL database connection.
-    
     Parameters:
     connection (MySQLConnection): MySQL connection object.
     cursor (MySQLCursor): MySQL cursor object.

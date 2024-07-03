@@ -2,7 +2,7 @@
 
 from connect import connect_to_database, close_connection
 from db_setup import db_setup
-from get_sh import get_stock, yf_getH
+from get_sh import get_stock
 
 def main():
     """
@@ -15,10 +15,13 @@ def main():
             if not tickers_input:
                 raise ValueError("Ticker symbols input cannot be empty.")
             tickers = tickers_input.split(',')
+
             db_setup(connection, cursor)
             get_stock(connection, cursor, tickers)
+
         except ValueError as ve:
             print(f"Input error: {ve}")
+
         finally:
             close_connection(connection, cursor)
 
