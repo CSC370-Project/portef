@@ -2,7 +2,13 @@ import mysql.connector
 from mysql.connector import Error
 
 def db_setup(connection, cursor):
-    # SQL statements as a list
+    """
+    Set up the database schema by executing SQL statements.
+    
+    Parameters:
+    connection (MySQLConnection): MySQL connection object.
+    cursor (MySQLCursor): MySQL cursor object to execute SQL queries.
+    """
     sql_statements = [
         "DROP TABLE IF EXISTS `PortfolioHasAllocation`;",
         "DROP TABLE IF EXISTS `PortfolioHasStock`;",
@@ -29,9 +35,7 @@ def db_setup(connection, cursor):
     try:
         for sql_statement in sql_statements:
             cursor.execute(sql_statement)
-            connection.commit()
+        connection.commit()
         print("SQL script executed successfully.")
     except Error as e:
         print(f"Error executing SQL script: {e}")
-
-    return cursor

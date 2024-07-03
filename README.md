@@ -1,45 +1,93 @@
-# portef
+## portef
 Portfolio optimization tool
 
+### Requirements
+- `mysql` or `mariadb`
+- `python3+`
+- `mysql-connector-python`
+- `yfinance`
 
-Requires `mysql` or `mariadb`, `python3+` (? check about this), and `mysql-connector-python`
+### Installation
+1. **Install Python dependencies**:
+    ```sh
+    pip install mysql-connector-python yfinance
+    ```
 
-In order to use, must already have an sql database created by user with all privileges. 
-- Login using the CLI as said user, 
-- Input the database name
-- Change localhost as desired
-- Input stock
+### Setup
+To use this tool, you must have an SQL database created with all privileges granted to a user.
 
-The (current) best way to see that the tables have been populated is to open the database ina separate terminal and, for example run `SELECT * FROM Stocks;` in order to check that stocks have been populated after running a command - if the program fails the output will let you know.
+1. **Create a Database**:
+    - Log into SQL through the terminal:
+      ```sh
+      mysql -u root -p
+      ```
+    - Create a database:
+      ```sql
+      CREATE DATABASE sprint;
+      ```
 
+2. **Create a User with All Permissions**:
+    - Create a user:
+      ```sql
+      CREATE USER 'csc370'@'localhost' IDENTIFIED BY '1234';
+      ```
+    - Grant all privileges on the database:
+      ```sql
+      GRANT ALL PRIVILEGES ON sprint.* TO 'csc370'@'localhost';
+      ```
+    - Update privileges:
+      ```sql
+      FLUSH PRIVILEGES;
+      ```
 
-### Guide
+### Usage
+1. **Navigate to the `portef` folder**:
+    ```sh
+    cd path/to/portef
+    ```
 
-You cannot use root to log into database, since root requires sudo. Since you need permissions to edit database, it's easiest to grant a user all privileges.
+2. **Run the script**:
+    ```sh
+    python3 portef.py
+    ```
 
-#### 1. Create a database 
-1. Log into sql through terminal: `mysql -u root -p`
-2. Create database: `CREATE DATABASE sprint;`
+3. **Log in with the previously created user**:
+    - Enter your username: `csc370`
+    - Enter your password: `1234`
+    - Enter the database name: `sprint`
+    - Do you want to change the host from localhost? (y/n): `n`
 
-#### 2. Create a user with all permissions:
-1. Create user: `CREATE USER 'csc370@'localhost' IDENTIFIED BY '1234';`
-2. Grant all privileges on a database: `GRANT ALL PRIVILEGES ON sprint.* TO 'csc370'@'localhost';`
-3. Update: `FLUSH PRIVILEGES;`
+4. **Input stock ticker symbols**:
+    - Enter the stock ticker symbols (separated by commas): `AAPL, MSFT, GOOGL`
 
-#### 3. Use the program:
-1. Navigate to portef folder and execute script: `python3 portef.py`
-2. Log in with previously created user:
-   1. `Enter your username: csc370`
-   2. `Enter your password: 1234`
-   3. `Enter the database name: sprint`
-   4. `Do you want to change the host fom localhost? (y/n): n`
-3. ...
+### Verification
+To verify that the tables have been populated, open the database in a separate terminal and run:
+```sql
+SELECT * FROM Stocks;
+```
+If the program fails, the output will notify you.
 
-\+ ToDo:
-- Attempt to automate user setup etc.
-- Recommended db setup (ACID)
-  - Change SQL code to transactions, i.e. if db update fails (i.e. YF call) NOTHING should be executed
-- Add logging to db
-  - Checkpoints at each 'stage' of db, i.e.
-    1. Loading YF data
-    2. EF production (might need sub-stages)
+### Notes
+- You cannot use the root user to log into the database since root requires sudo. It is easiest to grant a user all privileges to edit the database.
+- The program will fetch historical stock data for the past year and insert it into the database.
+
+### Example
+```sh
+$ python3 portef.py
+Enter your username: csc370
+Enter your password: ****
+Enter the database name: sprint
+Do you want to change the host from localhost? (y/n): n
+Enter the stock ticker symbols (separated by commas): AAPL, MSFT, GOOGL
+```
+
+### Dependencies
+- **[yfinance](https://pypi.org/project/yfinance/)**: Download market data from Yahoo! Finance's API.
+- **[mysql-connector-python](https://pypi.org/project/mysql-connector-python/)**: MySQL driver written in Python which does not depend on MySQL C client libraries and implements the DB API v2.0 specification (PEP-249).
+
+### License
+This project is licensed under the MIT License.
+
+### Acknowledgments
+- [yfinance](https://pypi.org/project/yfinance/)
+- [mysql-connector-python](https://pypi.org/project/mysql-connector-python/)
