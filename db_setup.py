@@ -2,7 +2,6 @@ import mysql.connector
 from mysql.connector import Error
 
 def db_setup(connection, cursor):
-    # SQL statements to create the necessary tables
     sql_statements = [
         "DROP TABLE IF EXISTS `PortfolioHasAllocation`;",
         "DROP TABLE IF EXISTS `PortfolioHasStock`;",
@@ -16,7 +15,8 @@ def db_setup(connection, cursor):
         "DROP TABLE IF EXISTS `History`;",
         "CREATE TABLE `Session` (`SessionID` INT PRIMARY KEY);",
         "CREATE TABLE `Portfolio` (`PortfolioID` INT PRIMARY KEY, `TotalAmt` FLOAT, `Risk` VARCHAR(64));",
-        "CREATE TABLE `Allocation` (`AllocID` INT PRIMARY KEY, `Ticker` VARCHAR(10), `Amount` FLOAT);",
+        # "CREATE TABLE `Allocation` (`AllocID` INT PRIMARY KEY, `Ticker` VARCHAR(10), `Amount` FLOAT);",
+        "CREATE TABLE `Allocation` (`AllocationID` INT AUTO_INCREMENT PRIMARY KEY, `Ticker` VARCHAR(10), `Weight` DECIMAL(5,4));"
         "CREATE TABLE `Stocks` (`StockID` INT PRIMARY KEY, `Ticker` VARCHAR(10), `Sector` VARCHAR(64), `Price` FLOAT, `SD` FLOAT, `ERet` FLOAT);",
         "CREATE TABLE `History` (`HistoryID` INT PRIMARY KEY, `Ticker` VARCHAR(10), `Date` VARCHAR(10), `Price` FLOAT);",
         "CREATE TABLE `PortfolioHasStock` (`PortfolioID` INT, `StockID` INT, FOREIGN KEY (`PortfolioID`) REFERENCES `Portfolio`(`PortfolioID`), FOREIGN KEY (`StockID`) REFERENCES `Stocks`(`StockID`), PRIMARY KEY (`PortfolioID`, `StockID`));",
@@ -27,15 +27,12 @@ def db_setup(connection, cursor):
     ]
 
     try:
-        # Start a new transaction
         connection.start_transaction()
         for sql_statement in sql_statements:
-            # Execute each SQL statement
             cursor.execute(sql_statement)
-        # Commit the transaction
         connection.commit()
-        print("SQL script executed successfully.")
+        print("Database schema set up successfully.")
     except Error as e:
-        # Rollback the transaction in case of an error
         connection.rollback()
-        print(f"Error executing SQL script: {e}")
+        print(f"Error setting up database schema: {e}")
+        raise

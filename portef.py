@@ -1,41 +1,53 @@
+#!/usr/bin/env python3
+
 from connect import connect_to_database, close_connection
 from db_setup import db_setup
 from get_sh import get_stock
-from ef import calculate_efficient_frontier, store_efficient_frontier
+from ef import calculate_efficient_frontier
 
 def main():
-    # Connect to the database
     connection, cursor = connect_to_database()
+
     if connection:
         try:
-            # Get user input for stock tickers, total investment amount, and risk level
             tickers_input = input("Enter the stock ticker symbols (separated by commas): ").strip()
             if not tickers_input:
                 raise ValueError("Ticker symbols input cannot be empty.")
-            tickers = tickers_input.split(',')
+            tickers = [ticker.strip() for ticker in tickers_input.split(',')]
 
-            total_amount = float(input("Enter the total investment amount: ").strip())
-            risk_level = input("Enter the desired risk level (low, medium, high): ").strip().lower()
+            amount = float(input("Enter the investment amount: "))
+            risk_level = float(input("Enter the desired risk level (0-1): "))
 
-            # Setup the database tables
             db_setup(connection, cursor)
-
-            # Fetch stock data and store in the database
+            cursor.fetchall()  # Consume any remaining result
             get_stock(connection, cursor, tickers)
+            cursor.fetchall()  # Consume any remaining result
 
-            # Calculate the efficient frontier
-            ef_data = calculate_efficient_frontier(cursor, risk_level, total_amount)
+            efficient_frontier = calculate_efficient_frontier(connection, cursor, tickers, amount, risk_level)
 
-            # Store the efficient frontier data in the database
-            store_efficient_frontier(connection, cursor, ef_data, total_amount, risk_level)
+            print("Efficient Frontier:")
+            for allocation in efficient_frontier:
+                print(allocation)
 
-            print("Efficient Frontier calculated and stored successfully.")
+            save_option = input("Do you want to save the efficient frontier to a file? (y/n): ").strip().lower()
+            if save_option == 'y':
+                filename = input("Enter the filename to save (e.g., efficient_frontier.txt): ").strip()
+                with open(filename, 'w') as f:
+                    for allocation in efficient_frontier:
+                        f.write(f"{allocation}\n")
+                print(f"Efficient frontier saved to {filename}")
+
+            print("Program executed successfully.")
+
         except ValueError as ve:
-            # Handle input errors
             print(f"Input error: {ve}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
         finally:
-            # Close the database connection
             close_connection(connection, cursor)
+    else:
+        print("Failed to connect to the database. Exiting program.")
+
 
 if __name__ == "__main__":
     main()
