@@ -3,6 +3,13 @@ from mysql.connector import Error
 import getpass
 
 def connect_to_database():
+    """
+    Connects to the MariaDB database using user-provided credentials.
+
+    Returns:
+        connection: MySQL connection object.
+        cursor: MySQL cursor object to execute database operations.
+    """
     username = input("Enter your username: ").strip()
     password = getpass.getpass("Enter your password: ")
     database = input("Enter the database name: ").strip()
@@ -16,7 +23,7 @@ def connect_to_database():
             password=password,
             database=database
         )
-        
+
         if connection.is_connected():
             print(f'Connected to MariaDB database {database} on {host}')
             cursor = connection.cursor()
@@ -29,6 +36,13 @@ def connect_to_database():
         return None, None
 
 def close_connection(connection, cursor):
+    """
+    Closes the database connection and cursor.
+
+    Args:
+        connection: MySQL connection object.
+        cursor: MySQL cursor object to execute database operations.
+    """
     if cursor:
         cursor.close()
     if connection and connection.is_connected():

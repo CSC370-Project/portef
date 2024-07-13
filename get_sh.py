@@ -1,8 +1,17 @@
 import yfinance as yf
+import pandas as pd
 from datetime import datetime, timedelta
 from mysql.connector import Error
 
 def yf_getH(cursor, ticker, stock_id):
+    """
+    Fetches historical stock data for a given ticker and inserts it into the database.
+
+    Args:
+        cursor: MySQL cursor object to execute database operations.
+        ticker: Stock ticker symbol.
+        stock_id: Unique identifier for the stock in the database.
+    """
     end_date = datetime.now().strftime('%Y-%m-%d')
     start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
 
@@ -23,6 +32,14 @@ def yf_getH(cursor, ticker, stock_id):
         raise
 
 def yf_getS(cursor, ticker, stock_id):
+    """
+    Fetches stock information for a given ticker and inserts it into the database.
+
+    Args:
+        cursor: MySQL cursor object to execute database operations.
+        ticker: Stock ticker symbol.
+        stock_id: Unique identifier for the stock in the database.
+    """
     try:
         stock = yf.Ticker(ticker)
         stock_info = stock.info
@@ -43,19 +60,45 @@ def yf_getS(cursor, ticker, stock_id):
         raise
 
 def get_stock(connection, cursor, tickers):
+    """
+    Fetches and inserts stock and historical data for a list of tickers.
+
+    Args:
+        connection: MySQL connection object.
+        cursor: MySQL cursor object to execute database operations.
+        tickers: List of stock ticker symbols.
+    """
     stock_id = 1
+
     try:
         connection.start_transaction()
+
         for ticker in tickers:
             ticker = ticker.strip()
             yf_getS(cursor, ticker, stock_id)
-            cursor.fetchall()  # Consume any remaining result
             yf_getH(cursor, ticker, stock_id)
-            cursor.fetchall()  # Consume any remaining result
             stock_id += 1000
+
         connection.commit()
         print("All stock data fetched and inserted successfully.")
     except Error as e:
         connection.rollback()
         print(f"Error fetching or inserting stock data: {e}")
-        raise
+
+def fetch_data(connection):
+    """
+    Fetches combined stock and historical data from the database.
+
+    Args:
+        connection: MySQL connection object.
+
+    Returns:
+        DataFrame containing the fetched data.
+    """
+    query = """
+    SELECT s.Ticker, h.Date, h.Price
+    FROM Stocks s
+    JOIN History h ON s.Ticker = h.Ticker
+    """
+    df = pd.read_sql(query, connection)
+    return df
