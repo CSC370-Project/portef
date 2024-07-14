@@ -55,7 +55,7 @@ def calculate_efficient_frontier(df):
     
     return results, weights_record, df
 
-def store_allocation(connection, cursor, weights_record, results, df):
+def store_allocation(connection, cursor, weights_record, results, df, session_id):
     """
     Stores the optimal portfolio allocation in the database.
 
@@ -66,6 +66,8 @@ def store_allocation(connection, cursor, weights_record, results, df):
         results: A numpy array containing portfolio returns, standard deviations, and Sharpe ratios.
         df: The pivoted DataFrame with dates as index and tickers as columns.
     """
+    table_prefix = f"session_{session_id}_" # Prefix for session-specific tables
+
     # Find the index of the portfolio with the maximum Sharpe ratio
     max_sharpe_idx = np.argmax(results[2])
     
@@ -77,12 +79,9 @@ def store_allocation(connection, cursor, weights_record, results, df):
     
     # Insert the optimal allocation into the database
     for ticker, weight in zip(tickers, optimal_weights):
-        cursor.execute("INSERT INTO Allocation (Ticker, Amount) VALUES (%s, %s)", (ticker, weight))
+        cursor.execute(f"INSERT INTO `{table_prefix}Allocation` (Ticker, Amount) VALUES (%s, %s)", (ticker, weight))
     
     # Commit the transaction
     connection.commit()
-    
-    # Close the cursor
-    cursor.close()
     
     print("Optimal allocation stored successfully")

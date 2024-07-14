@@ -43,8 +43,15 @@ def close_connection(connection, cursor):
         connection: MySQL connection object.
         cursor: MySQL cursor object to execute database operations.
     """
-    if cursor:
-        cursor.close()
-    if connection and connection.is_connected():
-        connection.close()
-        print('MariaDB database connection closed')
+    try:
+        if cursor:
+            cursor.close()
+    except Error:
+        print("Cursor already closed")
+
+    try:
+        if connection and connection.is_connected():
+            connection.close()
+            print('MariaDB database connection closed')
+    except Error:
+        print("Connection already closed")
