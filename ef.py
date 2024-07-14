@@ -85,3 +85,39 @@ def store_allocation(connection, cursor, weights_record, results, df, session_id
     connection.commit()
     
     print("Optimal allocation stored successfully")
+
+# Modified
+def fetch_allocation_data(connection, session_id):
+    """
+    Fetches the allocation data from the database using a view.
+
+    Args:
+        connection: MySQL connection object.
+
+    Returns:
+        DataFrame containing the allocation data.
+    """
+    table_prefix = f"session_{session_id}_"
+    query = f"SELECT * FROM `{table_prefix}Alloc`"
+    
+    try:
+        df = pd.read_sql(query, connection)
+        return df
+    except Exception as e:
+        print(f"Error fetching allocation data: {e}")
+        raise
+
+def print_allocation_data(df, output_file=None):
+    """
+    Prints the allocation data to the command line and optionally to a .txt file.
+
+    Args:
+        df: DataFrame containing the allocation data.
+        output_file: Optional; path to the output .txt file.
+    """
+    print("Allocation Data:")
+    print(df.to_string(index=False))
+
+    if output_file:
+        df.to_csv(output_file, index=False, sep='\t')
+        print(f"Allocation data written to {output_file}")

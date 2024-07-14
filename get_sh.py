@@ -92,25 +92,19 @@ def get_stock(connection, cursor, tickers, session_id):
         connection.rollback()
         print(f"Error fetching or inserting stock data: {e}")
 
+# Modified
 def fetch_data(connection, session_id):
     """
-    Fetches combined stock and historical data from the database.
+    Fetches combined stock and historical data from the database using a view.
 
     Args:
         connection: MySQL connection object.
-        session_id: Unique session identifier for table names.
 
     Returns:
         DataFrame containing the fetched data.
     """
-    table_stocks = f"session_{session_id}_Stocks"
-    table_history = f"session_{session_id}_History"
-    
-    query = f"""
-    SELECT s.Ticker, h.Date, h.Price
-    FROM `{table_stocks}` s
-    JOIN `{table_history}` h ON s.Ticker = h.Ticker
-    """
+    table_prefix = f"session_{session_id}_" # Prefix for session-specific tables
+    query = f"SELECT * FROM `{table_prefix}Data`"
     
     try:
         df = pd.read_sql(query, connection)

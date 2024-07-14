@@ -1,7 +1,7 @@
 from connect import connect_to_database, close_connection
-from db_setup import create_session_tables, cleanup_session_tables, delete_all_tables
+from db_setup import create_session_tables, cleanup_session_tables
 from get_sh import get_stock, fetch_data
-from ef import calculate_efficient_frontier, store_allocation
+from ef import calculate_efficient_frontier, store_allocation, fetch_allocation_data, print_allocation_data
 import yfinance as yf
 import uuid
 import pandas as pd
@@ -19,42 +19,6 @@ def ticker_exists(ticker_symbol):
     ticker = yf.Ticker(ticker_symbol)
     hist = ticker.history(period="1d")
     return not hist.empty
-
-def fetch_allocation_data(connection, session_id):
-    """
-    Fetches the allocation data from the database.
-
-    Args:
-        connection: MySQL connection object.
-        session_id: Unique session identifier for table names.
-
-    Returns:
-        DataFrame containing the allocation data.
-    """
-    table_allocation = f"session_{session_id}_Allocation"
-    query = f"SELECT Ticker, Amount FROM `{table_allocation}`"
-    
-    try:
-        df = pd.read_sql(query, connection)
-        return df
-    except Exception as e:
-        print(f"Error fetching allocation data: {e}")
-        raise
-
-def print_allocation_data(df, output_file=None):
-    """
-    Prints the allocation data to the command line and optionally to a .txt file.
-
-    Args:
-        df: DataFrame containing the allocation data.
-        output_file: Optional; path to the output .txt file.
-    """
-    print("Allocation Data:")
-    print(df.to_string(index=False))
-
-    if output_file:
-        df.to_csv(output_file, index=False, sep='\t')
-        print(f"Allocation data written to {output_file}")
 
 def main():
     connection, cursor = connect_to_database()
@@ -116,4 +80,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
