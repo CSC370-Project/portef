@@ -1,0 +1,1 @@
+Enter the stock ticker symbols (separated by commas), or 'quit' to exit: Enter the total investment amount: 
