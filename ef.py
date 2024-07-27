@@ -3,50 +3,9 @@ import numpy as np
 import warnings
 from mysql.connector import Error
 
-# def calculate_efficient_frontier(df):
-#     """
-#     Calculate the efficient frontier for a given set of stock data.
-    
-#     Args:
-#     df (DataFrame): DataFrame containing Date, Ticker, and Price columns.
-    
-#     Returns:
-#     tuple: Contains results array, weights record, and processed DataFrame.
-#     """
-#     # Convert Date to datetime and pivot the DataFrame
-#     df['Date'] = pd.to_datetime(df['Date'])
-#     df = df.pivot(index='Date', columns='Ticker', values='Price')
-    
-#     # Calculate returns and covariance matrix
-#     returns = df.pct_change().dropna()
-#     mean_returns = returns.mean()
-#     cov_matrix = returns.cov()
-    
-#     # Monte Carlo simulation parameters
-#     num_portfolios = 10000
-#     results = np.zeros((3, num_portfolios))
-#     weights_record = []
-
-#     # Perform Monte Carlo simulation
-#     for i in range(num_portfolios):
-#         weights = np.random.random(len(df.columns))
-#         weights /= np.sum(weights)
-#         weights_record.append(weights)
-        
-#         # Calculate portfolio return and standard deviation
-#         portfolio_return = np.sum(weights * mean_returns)
-#         portfolio_stddev = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
-        
-#         # Store results
-#         results[0, i] = portfolio_return
-#         results[1, i] = portfolio_stddev
-#         results[2, i] = results[0, i] / results[1, i]  # Sharpe ratio
-
-#     return results, weights_record, df
-
 def calculate_efficient_frontier(df):
     """
-    Calculate the efficient frontier for a given set of stock data, handling newer stocks with NaN values.
+    Calculate the efficient frontier for a given set of stock data.
     
     Args:
     df (DataFrame): DataFrame containing Date, Ticker, and Price columns.
@@ -58,13 +17,7 @@ def calculate_efficient_frontier(df):
     df['Date'] = pd.to_datetime(df['Date'])
     df = df.pivot(index='Date', columns='Ticker', values='Price')
     
-    # Remove dates where all stocks have NaN values
-    df = df.dropna(how='all')
-    
-    # Forward fill NaN values for newer stocks
-    df = df.ffill()
-    
-    # Calculate returns, handling potential NaN values
+    # Calculate returns and covariance matrix
     returns = df.pct_change().dropna()
     mean_returns = returns.mean()
     cov_matrix = returns.cov()
@@ -88,14 +41,8 @@ def calculate_efficient_frontier(df):
         results[0, i] = portfolio_return
         results[1, i] = portfolio_stddev
         results[2, i] = results[0, i] / results[1, i]  # Sharpe ratio
-        # if results[1, i] != 0:
-        #     results[2, i] = results[0, i] / results[1, i]  # Sharpe ratio
-        # else:
-        #     results[2, i] = 0  # or some other appropriate value
-
 
     return results, weights_record, df
-
 
 def store_allocation(connection, cursor, weights_record, results, df, session_id):
     """
@@ -114,15 +61,9 @@ def store_allocation(connection, cursor, weights_record, results, df, session_id
     optimal_weights = weights_record[max_sharpe_idx]
     tickers = df.columns.tolist()
 
-    # for ticker, weight in zip(tickers, optimal_weights):
-    #     cursor.execute(f"INSERT INTO `{table_prefix}Allocation` (Ticker, Amount) VALUES (%s, %s)", (ticker, weight))
-
     for ticker, weight in zip(tickers, optimal_weights):
-        if np.isnan(weight):
-            weight = None  # or some other appropriate value
         cursor.execute(f"INSERT INTO `{table_prefix}Allocation` (Ticker, Amount) VALUES (%s, %s)", (ticker, weight))
-    # ... rest of the function ...
-
+    
     connection.commit()
 
 def fetch_allocation_data(connection, session_id):
