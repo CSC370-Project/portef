@@ -11,7 +11,6 @@ This Python program calculates an efficient frontier for a given set of stocks u
    - numpy
    - yfinance
    - mysql-connector-python
-   - matplotlib (for visualization, if needed)
 
 ## Database Setup
 
