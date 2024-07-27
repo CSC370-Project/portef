@@ -1,123 +1,183 @@
 import pandas as pd
 import numpy as np
-from scipy.optimize import minimize
+import warnings
+from mysql.connector import Error
+
+# def calculate_efficient_frontier(df):
+#     """
+#     Calculate the efficient frontier for a given set of stock data.
+    
+#     Args:
+#     df (DataFrame): DataFrame containing Date, Ticker, and Price columns.
+    
+#     Returns:
+#     tuple: Contains results array, weights record, and processed DataFrame.
+#     """
+#     # Convert Date to datetime and pivot the DataFrame
+#     df['Date'] = pd.to_datetime(df['Date'])
+#     df = df.pivot(index='Date', columns='Ticker', values='Price')
+    
+#     # Calculate returns and covariance matrix
+#     returns = df.pct_change().dropna()
+#     mean_returns = returns.mean()
+#     cov_matrix = returns.cov()
+    
+#     # Monte Carlo simulation parameters
+#     num_portfolios = 10000
+#     results = np.zeros((3, num_portfolios))
+#     weights_record = []
+
+#     # Perform Monte Carlo simulation
+#     for i in range(num_portfolios):
+#         weights = np.random.random(len(df.columns))
+#         weights /= np.sum(weights)
+#         weights_record.append(weights)
+        
+#         # Calculate portfolio return and standard deviation
+#         portfolio_return = np.sum(weights * mean_returns)
+#         portfolio_stddev = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+        
+#         # Store results
+#         results[0, i] = portfolio_return
+#         results[1, i] = portfolio_stddev
+#         results[2, i] = results[0, i] / results[1, i]  # Sharpe ratio
+
+#     return results, weights_record, df
 
 def calculate_efficient_frontier(df):
     """
-    Calculates the efficient frontier for a given DataFrame of stock prices.
-
-    Args:
-        df: DataFrame containing stock prices with columns ['Date', 'Ticker', 'Price'].
-
-    Returns:
-        results: A numpy array containing portfolio returns, standard deviations, and Sharpe ratios.
-        weights_record: A list of numpy arrays containing the weights of each portfolio.
-        df: The pivoted DataFrame with dates as index and tickers as columns.
-    """
-    # Convert 'Date' column to datetime
-    df['Date'] = pd.to_datetime(df['Date'])
+    Calculate the efficient frontier for a given set of stock data, handling newer stocks with NaN values.
     
-    # Pivot the DataFrame to have dates as index and tickers as columns
+    Args:
+    df (DataFrame): DataFrame containing Date, Ticker, and Price columns.
+    
+    Returns:
+    tuple: Contains results array, weights record, and processed DataFrame.
+    """
+    # Convert Date to datetime and pivot the DataFrame
+    df['Date'] = pd.to_datetime(df['Date'])
     df = df.pivot(index='Date', columns='Ticker', values='Price')
     
-    # Calculate daily returns
-    returns = df.pct_change().dropna()
+    # Remove dates where all stocks have NaN values
+    df = df.dropna(how='all')
     
-    # Calculate mean returns and covariance matrix
+    # Forward fill NaN values for newer stocks
+    df = df.ffill()
+    
+    # Calculate returns, handling potential NaN values
+    returns = df.pct_change().dropna()
     mean_returns = returns.mean()
     cov_matrix = returns.cov()
     
-    # Number of portfolios to simulate
+    # Monte Carlo simulation parameters
     num_portfolios = 10000
-    
-    # Initialize results array to store portfolio returns, standard deviations, and Sharpe ratios
     results = np.zeros((3, num_portfolios))
-    
-    # List to store the weights of each portfolio
     weights_record = []
-    
+
+    # Perform Monte Carlo simulation
     for i in range(num_portfolios):
-        # Generate random weights for each stock
         weights = np.random.random(len(df.columns))
         weights /= np.sum(weights)
-        
-        # Store the weights
         weights_record.append(weights)
         
         # Calculate portfolio return and standard deviation
         portfolio_return = np.sum(weights * mean_returns)
         portfolio_stddev = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
         
-        # Store the results
+        # Store results
         results[0, i] = portfolio_return
         results[1, i] = portfolio_stddev
         results[2, i] = results[0, i] / results[1, i]  # Sharpe ratio
-    
+        # if results[1, i] != 0:
+        #     results[2, i] = results[0, i] / results[1, i]  # Sharpe ratio
+        # else:
+        #     results[2, i] = 0  # or some other appropriate value
+
+
     return results, weights_record, df
+
 
 def store_allocation(connection, cursor, weights_record, results, df, session_id):
     """
-    Stores the optimal portfolio allocation in the database.
-
+    Store the optimal portfolio allocation in the database.
+    
     Args:
-        connection: MySQL connection object.
-        cursor: MySQL cursor object to execute database operations.
-        weights_record: List of numpy arrays containing the weights of each portfolio.
-        results: A numpy array containing portfolio returns, standard deviations, and Sharpe ratios.
-        df: The pivoted DataFrame with dates as index and tickers as columns.
-    """
-    table_prefix = f"session_{session_id}_" # Prefix for session-specific tables
-
-    # Find the index of the portfolio with the maximum Sharpe ratio
-    max_sharpe_idx = np.argmax(results[2])
-    
-    # Get the optimal weights
-    optimal_weights = weights_record[max_sharpe_idx]
-    
-    # Get the list of tickers
-    tickers = df.columns.tolist()
-    
-    # Insert the optimal allocation into the database
-    for ticker, weight in zip(tickers, optimal_weights):
-        cursor.execute(f"INSERT INTO `{table_prefix}Allocation` (Ticker, Amount) VALUES (%s, %s)", (ticker, weight))
-    
-    # Commit the transaction
-    connection.commit()
-    
-    print("Optimal allocation stored successfully")
-
-# Modified
-def fetch_allocation_data(connection, session_id):
-    """
-    Fetches the allocation data from the database using a view.
-
-    Args:
-        connection: MySQL connection object.
-
-    Returns:
-        DataFrame containing the allocation data.
+    connection: Database connection object.
+    cursor: Database cursor object.
+    weights_record (list): List of weight arrays for each portfolio.
+    results (np.array): Array of portfolio returns, standard deviations, and Sharpe ratios.
+    df (DataFrame): Processed DataFrame of stock data.
+    session_id (str): Unique session identifier.
     """
     table_prefix = f"session_{session_id}_"
-    query = f"SELECT * FROM `{table_prefix}Alloc`"
+    max_sharpe_idx = np.argmax(results[2])
+    optimal_weights = weights_record[max_sharpe_idx]
+    tickers = df.columns.tolist()
+
+    # for ticker, weight in zip(tickers, optimal_weights):
+    #     cursor.execute(f"INSERT INTO `{table_prefix}Allocation` (Ticker, Amount) VALUES (%s, %s)", (ticker, weight))
+
+    for ticker, weight in zip(tickers, optimal_weights):
+        if np.isnan(weight):
+            weight = None  # or some other appropriate value
+        cursor.execute(f"INSERT INTO `{table_prefix}Allocation` (Ticker, Amount) VALUES (%s, %s)", (ticker, weight))
+    # ... rest of the function ...
+
+    connection.commit()
+
+def fetch_allocation_data(connection, session_id):
+    """
+    Fetch allocation data from the database.
     
+    Args:
+    connection: Database connection object.
+    session_id (str): Unique session identifier.
+    
+    Returns:
+    DataFrame: Allocation data for the given session.
+    """
+    table_name = f"session_{session_id}_Allocation"
+    query = f"SELECT Ticker, Amount FROM `{table_name}`"
+
     try:
-        df = pd.read_sql(query, connection)
+        warnings.filterwarnings("ignore", category=UserWarning)
+        df = pd.read_sql_query(query, connection)
         return df
-    except Exception as e:
+    except Error as e:
         print(f"Error fetching allocation data: {e}")
         raise
 
+def scale_allocation_by_investment(allocation_df, investment_amount):
+    """
+    Scale allocation percentages by the total investment amount.
+    
+    Args:
+    allocation_df (DataFrame): DataFrame containing allocation percentages.
+    investment_amount (float): Total investment amount.
+    
+    Returns:
+    DataFrame: Updated DataFrame with investment amounts.
+    """
+    allocation_df['Investment'] = allocation_df['Amount'] * investment_amount
+    return allocation_df
+
 def print_allocation_data(df, output_file=None):
     """
-    Prints the allocation data to the command line and optionally to a .txt file.
-
+    Print allocation data and optionally save to a file.
+    
     Args:
-        df: DataFrame containing the allocation data.
-        output_file: Optional; path to the output .txt file.
+    df (DataFrame): Allocation data DataFrame.
+    output_file (str, optional): Path to output file.
     """
+    if 'Investment' in df.columns:
+        df['Investment'] = df['Investment'].apply(lambda x: f"${x:,.2f}")
+
     print("Allocation Data:")
-    print(df.to_string(index=False))
+    if 'Investment' in df.columns:
+        print(df.to_string(index=False, columns=['Ticker', 'Amount', 'Investment']))
+    else:
+        print(df.to_string(index=False))
 
     if output_file:
         df.to_csv(output_file, index=False, sep='\t')
-        print(f"Allocation data written to {output_file}")
+

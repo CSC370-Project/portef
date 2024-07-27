@@ -1,95 +1,80 @@
-## portef
-Portfolio optimization tool
+# Efficient Frontier Portfolio Optimization
 
-### Requirements
-- `mysql` or `mariadb`
-- `python3+`
-- `mysql-connector-python`
-- `yfinance`
-- `scipy`
-- `pandas`
+This Python program calculates an efficient frontier for a given set of stocks using Monte Carlo simulation and provides an optimal portfolio allocation based on the Sharpe ratio.
 
-### Installation
-1. **Install Python dependencies**:
-    ```sh
-    pip install mysql-connector-python yfinance scipy pandas
-    ```
+## Required Packages and Programs
 
-### Setup
-To use this tool, you must have an SQL database created with all privileges granted to a user.
+1. Python 3.7+
+2. MariaDB 10.4+
+3. Python packages (install via pip):
+   - pandas
+   - numpy
+   - yfinance
+   - mysql-connector-python
+   - matplotlib (for visualization, if needed)
 
-1. **Create a Database**:
-    - Log into SQL through the terminal:
-      ```sh
-      mysql -u root -p
-      ```
-    - Create a database:
-      ```sql
-      CREATE DATABASE sprint;
-      ```
+## Database Setup
 
-2. **Create a User with All Permissions**:
-    - Create a user:
-      ```sql
-      CREATE USER 'csc370'@'localhost' IDENTIFIED BY '1234';
-      ```
-    - Grant all privileges on the database:
-      ```sql
-      GRANT ALL PRIVILEGES ON sprint.* TO 'csc370'@'localhost';
-      ```
-    - Update privileges:
-      ```sql
-      FLUSH PRIVILEGES;
-      ```
+1. Install MariaDB following the instructions at: https://www.mariadbtutorial.com/getting-started/install-mariadb/
 
-### Usage
-1. **Navigate to the `portef` folder**:
-    ```sh
-    cd path/to/portef
-    ```
+2. Create a new database for this project:
+   ```sql
+   CREATE DATABASE portfolio_optimization;
+   ```
 
-2. **Run the script**:
-    ```sh
-    python3 portef.py
-    ```
+3. Create a user with appropriate permissions:
+   ```sql
+   CREATE USER 'portfolio_user'@'localhost' IDENTIFIED BY 'your_password';
+   GRANT ALL PRIVILEGES ON portfolio_optimization.* TO 'portfolio_user'@'localhost';
+   FLUSH PRIVILEGES;
+   ```
 
-3. **Log in with the previously created user**:
-    - Enter your username: `csc370`
-    - Enter your password: `1234`
-    - Enter the database name: `sprint`
-    - Do you want to change the host from localhost? (y/n): `n`
+4. Update the `connect.py` file with your database credentials.
 
-4. **Input stock ticker symbols**:
-    - Enter the stock ticker symbols (separated by commas): `AAPL, MSFT, GOOGL`
+## Efficient Frontier Calculation
 
-### Verification
-To verify that the tables have been populated, open the database in a separate terminal and run:
-```sql
-SELECT * FROM Stocks;
-```
-If the program fails, the output will notify you.
+The efficient frontier is calculated using Monte Carlo simulation, following these steps:
 
-### Notes
-- You cannot use the root user to log into the database since root requires sudo. It is easiest to grant a user all privileges to edit the database.
-- The program will fetch historical stock data for the past year and insert it into the database.
+1. **Data Preparation**: 
+   - Historical stock price data is fetched using the yfinance library.
+   - Daily returns are calculated from the price data.
 
-### Example
-```sh
-$ python3 portef.py
-Enter your username: csc370
-Enter your password: ****
-Enter the database name: sprint
-Do you want to change the host from localhost? (y/n): n
-Enter the stock ticker symbols (separated by commas): AAPL, MSFT, GOOGL
-```
+2. **Monte Carlo Simulation**:
+   - A large number of random portfolio weights are generated (default: 10,000).
+   - For each set of weights:
+     - Portfolio return is calculated as the weighted sum of individual stock returns.
+     - Portfolio risk (standard deviation) is calculated using the covariance matrix of returns.
+     - The Sharpe ratio is computed as (portfolio return / portfolio risk).
 
-### Dependencies
-- **[yfinance](https://pypi.org/project/yfinance/)**: Download market data from Yahoo! Finance's API.
-- **[mysql-connector-python](https://pypi.org/project/mysql-connector-python/)**: MySQL driver written in Python which does not depend on MySQL C client libraries and implements the DB API v2.0 specification (PEP-249).
+3. **Efficient Frontier**:
+   - The results of all simulations are plotted with risk on the x-axis and return on the y-axis.
+   - The efficient frontier is the upper edge of this plot, representing portfolios with the highest return for a given level of risk.
 
-### License
-This project is licensed under the MIT License.
+4. **Optimal Portfolio Selection**:
+   - The portfolio with the highest Sharpe ratio is selected as the optimal portfolio.
 
-### Acknowledgments
-- [yfinance](https://pypi.org/project/yfinance/)
-- [mysql-connector-python](https://pypi.org/project/mysql-connector-python/)
+## How to Use
+
+1. Run the main script:
+   ```
+   python main.py
+   ```
+
+2. Enter stock ticker symbols when prompted, separated by commas (e.g., AAPL, GOOGL, MSFT).
+
+3. Enter the total investment amount when prompted.
+
+4. The program will calculate the efficient frontier and optimal portfolio allocation.
+
+5. Results will be displayed in the console and optionally saved to a text file.
+
+## Output
+
+The program provides:
+- Optimal portfolio weights for each stock
+- Expected return and risk of the optimal portfolio
+- Investment amount for each stock based on the total investment
+
+## Note
+
+This program uses historical data to calculate the efficient frontier. Past performance does not guarantee future results. Always consult with a financial advisor before making investment decisions.
