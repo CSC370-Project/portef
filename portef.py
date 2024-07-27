@@ -1,6 +1,8 @@
 import uuid
 import pandas as pd
 import yfinance as yf
+import logging
+from contextlib import closing
 
 from connect import connect_to_database, close_connection
 from db_setup import create_session_tables, cleanup_session_tables
@@ -66,12 +68,57 @@ def cleanup_and_close(connection, cursor, session_id):
     finally:
         close_connection(connection, cursor)
 
+# def main():
+#     # Connect to the database and generate a unique session ID
+#     connection, cursor = connect_to_database()
+#     session_id = uuid.uuid4()
+
+#     if connection:
+#         try:
+#             # Set up session tables in the database
+#             create_session_tables(connection, cursor, session_id)
+
+#             # Get valid stock tickers from user input
+#             valid_tickers = get_valid_tickers()
+
+#             # Get investment amount from user input
+#             investment_amount = get_investment_amount()
+
+#             # Fetch stock data and calculate efficient frontier
+#             get_stock(connection, cursor, valid_tickers, session_id)
+#             data = fetch_data(connection, session_id)
+#             results, weights_record, df = calculate_efficient_frontier(data)
+
+#             # Store allocation data in the database
+#             store_allocation(connection, cursor, weights_record, results, df, session_id)
+
+#             # Fetch and process allocation data
+#             process_allocation_data(connection, session_id, investment_amount)
+
+#         except ValueError as ve:
+#             print(f"Input error: {ve}")
+#         except Exception as e:
+#             print(f"An error occurred: {e}")
+#         finally:
+#             # Clean up session tables and close database connection
+#             cleanup_and_close(connection, cursor, session_id)
+#     else:
+#         print("Failed to connect to the database. Exiting program.")
+
+# if __name__ == "__main__":
+#     main()
+
+
+from contextlib import closing
+
 def main():
     # Connect to the database and generate a unique session ID
-    connection, cursor = connect_to_database()
-    session_id = uuid.uuid4()
+    connection_tuple = connect_to_database()
+    
+    if connection_tuple[0]:  # Check if connection is successful
+        connection, cursor = connection_tuple
+        session_id = uuid.uuid4()
 
-    if connection:
         try:
             # Set up session tables in the database
             create_session_tables(connection, cursor, session_id)

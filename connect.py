@@ -119,7 +119,6 @@
 
 import mysql.connector
 from mysql.connector import Error
-import getpass
 
 def connect_to_database():
     """
