@@ -28,8 +28,6 @@ This Python program calculates an efficient frontier for a given set of stocks u
    FLUSH PRIVILEGES;
    ```
 
-4. Update the `connect.py` file with your database credentials.
-
 ## Efficient Frontier Calculation
 
 The efficient frontier is calculated using Monte Carlo simulation, following these steps:
