@@ -74,4 +74,4 @@ The program provides:
 
 ## Note
 
-This program uses one year of historical data to calculate the efficient frontier, as such is not a reliable resource in its current state. Always consult with a financial advisor before making investment decisions.
+This program uses 10 years of historical data to calculate the efficient frontier. Always consult with a financial advisor before making investment decisions.
