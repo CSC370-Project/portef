@@ -117,6 +117,8 @@
 #         print(f"Error closing database connection: {e}")
 
 
+# --------------------------------------------------
+
 import mysql.connector
 from mysql.connector import Error
 
@@ -131,7 +133,7 @@ def connect_to_database():
     try:
         # Initial connection attempt without SSL
         connection = mysql.connector.connect(
-            host='portef-public.c1coy20o478i.us-east-1.rds.amazonaws.com',
+            host='portef-public.c3y0886qqtf8.us-west-2.rds.amazonaws.com',
             port=3306,
             user='csc370',
             password='1234',
@@ -152,7 +154,7 @@ def connect_to_database():
         try:
             # SSL connection attempt
             connection = mysql.connector.connect(
-                host='portef-public.c1coy20o478i.us-east-1.rds.amazonaws.com',
+                host='portef-public.c3y0886qqtf8.us-west-2.rds.amazonaws.com',
                 port=3306,
                 user='csc370',
                 password='1234',
@@ -194,3 +196,46 @@ def close_connection(connection, cursor):
             connection.close()
     except Error as e:
         print(f"Error closing database connection: {e}")
+
+# --------------------------------------------------
+
+# import mysql.connector
+# from mysql.connector import Error
+# from mysql.connector.pooling import MySQLConnectionPool
+
+# # Create a global connection pool
+# connection_pool = MySQLConnectionPool(
+#     pool_name="mypool",
+#     pool_size=5,
+#     host='portef-public.c3y0886qqtf8.us-west-2.rds.amazonaws.com',
+#     port=3306,
+#     user='csc370',
+#     password='1234',
+#     database='sprint'
+# )
+
+# def connect_to_database():
+#     """
+#     Get a connection from the connection pool.
+#     Returns:
+#     tuple: (connection, cursor) if successful, (None, None) otherwise
+#     """
+#     try:
+#         connection = connection_pool.get_connection()
+#         cursor = connection.cursor(buffered=True)
+#         return connection, cursor
+#     except Error as e:
+#         print(f"Error connecting to MySQL database: {e}")
+#         return None, None
+
+# def close_connection(connection, cursor):
+#     """
+#     Close the database connection and cursor.
+#     """
+#     try:
+#         if cursor:
+#             cursor.close()
+#         if connection:
+#             connection.close()
+#     except Error as e:
+#         print(f"Error closing database connection: {e}")

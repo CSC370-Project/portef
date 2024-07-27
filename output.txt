@@ -1,1 +1,4 @@
-Enter the stock ticker symbols (separated by commas), or 'quit' to exit: Enter the total investment amount: 
+Enter the stock ticker symbols (separated by commas), or 'quit' to exit: Enter the total investment amount: Enter the path to the output .txt file (or press Enter to skip): Allocation Data:
+Ticker   Amount  Investment
+  AAPL 0.377633 $188,816.50
+  MSFT 0.622367 $311,183.50

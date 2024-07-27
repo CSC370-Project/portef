@@ -73,6 +73,12 @@ def create_session_tables(connection, cursor, session_id):
             JOIN `{table_prefix}History` h ON s.Ticker = h.Ticker;"""
     ]
 
+    # sql_statements.extend([
+    #     f"CREATE INDEX idx_{table_prefix}Stocks_Ticker ON `{table_prefix}Stocks` (Ticker);",
+    #     f"CREATE INDEX idx_{table_prefix}History_Ticker_Date ON `{table_prefix}History` (Ticker, Date);",
+    #     f"CREATE INDEX idx_{table_prefix}Allocation_Ticker ON `{table_prefix}Allocation` (Ticker);"
+    # ])
+
     try:
         # Execute each SQL statement
         for sql_statement in sql_statements:

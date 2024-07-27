@@ -171,46 +171,81 @@ def calculate_efficient_frontier(df):
 
     return results, weights_record, df
 
-def store_allocation(connection, cursor, weights_record, results, df, session_id):
-    """
-    Store the optimal portfolio allocation in the database.
+# def store_allocation(connection, cursor, weights_record, results, df, session_id):
+#     """
+#     Store the optimal portfolio allocation in the database.
     
-    Args:
-    connection: Database connection object.
-    cursor: Database cursor object.
-    weights_record (list): List of weight arrays for each portfolio.
-    results (np.array): Array of portfolio returns, standard deviations, and Sharpe ratios.
-    df (DataFrame): Processed DataFrame of stock data.
-    session_id (str): Unique session identifier.
-    """
+#     Args:
+#     connection: Database connection object.
+#     cursor: Database cursor object.
+#     weights_record (list): List of weight arrays for each portfolio.
+#     results (np.array): Array of portfolio returns, standard deviations, and Sharpe ratios.
+#     df (DataFrame): Processed DataFrame of stock data.
+#     session_id (str): Unique session identifier.
+#     """
+#     table_prefix = f"session_{session_id}_"
+#     max_sharpe_idx = np.argmax(results[2])
+#     optimal_weights = weights_record[max_sharpe_idx]
+#     tickers = df.columns.tolist()
+
+#     for ticker, weight in zip(tickers, optimal_weights):
+#         cursor.execute(f"INSERT INTO `{table_prefix}Allocation` (Ticker, Amount) VALUES (%s, %s)", (ticker, weight))
+    
+#     connection.commit()
+
+def store_allocation(connection, cursor, weights_record, results, df, session_id):
     table_prefix = f"session_{session_id}_"
     max_sharpe_idx = np.argmax(results[2])
     optimal_weights = weights_record[max_sharpe_idx]
     tickers = df.columns.tolist()
-
-    for ticker, weight in zip(tickers, optimal_weights):
-        cursor.execute(f"INSERT INTO `{table_prefix}Allocation` (Ticker, Amount) VALUES (%s, %s)", (ticker, weight))
     
-    connection.commit()
+    insert_query = f"""
+    INSERT INTO `{table_prefix}Allocation` (Ticker, Amount)
+    VALUES (%s, %s)
+    """
+    
+    try:
+        cursor.executemany(insert_query, list(zip(tickers, optimal_weights)))
+        connection.commit()
+    except Error as e:
+        connection.rollback()
+        print(f"Error storing allocation: {e}")
+        raise
+
+# def fetch_allocation_data(connection, session_id):
+#     """
+#     Fetch allocation data from the database.
+    
+#     Args:
+#     connection: Database connection object.
+#     session_id (str): Unique session identifier.
+    
+#     Returns:
+#     DataFrame: Allocation data for the given session.
+#     """
+#     table_name = f"session_{session_id}_Allocation"
+#     query = f"SELECT Ticker, Amount FROM `{table_name}`"
+
+#     try:
+#         warnings.filterwarnings("ignore", category=UserWarning)
+#         df = pd.read_sql_query(query, connection)
+#         return df
+#     except Error as e:
+#         print(f"Error fetching allocation data: {e}")
+#         raise
 
 def fetch_allocation_data(connection, session_id):
-    """
-    Fetch allocation data from the database.
-    
-    Args:
-    connection: Database connection object.
-    session_id (str): Unique session identifier.
-    
-    Returns:
-    DataFrame: Allocation data for the given session.
-    """
     table_name = f"session_{session_id}_Allocation"
-    query = f"SELECT Ticker, Amount FROM `{table_name}`"
-
+    query = f"""
+    SELECT a.Ticker, a.Amount, s.Price
+    FROM `{table_name}` a
+    JOIN `session_{session_id}_Stocks` s ON a.Ticker = s.Ticker
+    """
     try:
-        warnings.filterwarnings("ignore", category=UserWarning)
-        df = pd.read_sql_query(query, connection)
-        return df
+        with connection.cursor(dictionary=True) as cursor:
+            cursor.execute(query)
+            result = cursor.fetchall()
+        return pd.DataFrame(result)
     except Error as e:
         print(f"Error fetching allocation data: {e}")
         raise
