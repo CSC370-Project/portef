@@ -12,22 +12,6 @@ This Python program calculates an efficient frontier for a given set of stocks u
    - yfinance
    - mysql-connector-python
 
-## Database Setup
-
-1. Install MariaDB following the instructions at: https://www.mariadbtutorial.com/getting-started/install-mariadb/
-
-2. Create a new database for this project:
-   ```sql
-   CREATE DATABASE sprint;
-   ```
-
-3. Create a user with appropriate permissions:
-   ```sql
-   CREATE USER `portfolio_user'@'localhost' IDENTIFIED BY 'your_password';
-   GRANT ALL PRIVILEGES ON portfolio_optimization.* TO 'portfolio_user'@'localhost';
-   FLUSH PRIVILEGES;
-   ```
-
 ## Efficient Frontier Calculation
 
 The efficient frontier is calculated using Monte Carlo simulation, following these steps:
