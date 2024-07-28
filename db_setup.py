@@ -6,27 +6,27 @@ def create_session_tables(connection, cursor, session_id):
     Create session-specific tables in the database.
 
     Args:
-    connection: MySQL database connection object
-    cursor: MySQL cursor object
-    session_id: Unique identifier for the current session
+        connection: MySQL database connection object
+        cursor: MySQL cursor object
+        session_id: Unique identifier for the current session
     """
     table_prefix = f"session_{session_id}_"
 
-    # SQL statements to create tables and views
+    # SQL statements to create tables
     sql_statements = [
         # Portfolio table
         f"""CREATE TABLE `{table_prefix}Portfolio` (
             PortfolioID INT AUTO_INCREMENT PRIMARY KEY,
             TotalAmt DECIMAL(15,2) CHECK (TotalAmt >= 0)
         );""",
-
+        
         # Allocation table
         f"""CREATE TABLE `{table_prefix}Allocation` (
             AllocID INT AUTO_INCREMENT PRIMARY KEY,
             Ticker VARCHAR(5) CHECK (Ticker REGEXP '^[A-Z]{{1,5}}$'),
             Amount FLOAT CHECK (Amount >= 0 AND Amount <= 1)
         );""",
-
+        
         # Stocks table
         f"""CREATE TABLE `{table_prefix}Stocks` (
             StockID INT AUTO_INCREMENT PRIMARY KEY,
@@ -36,7 +36,7 @@ def create_session_tables(connection, cursor, session_id):
             SD FLOAT,
             ERet FLOAT
         );""",
-
+        
         # History table
         f"""CREATE TABLE `{table_prefix}History` (
             HistoryID INT AUTO_INCREMENT PRIMARY KEY,
@@ -44,40 +44,34 @@ def create_session_tables(connection, cursor, session_id):
             Date DATE CHECK (Date >= '1900-01-01'),
             Price FLOAT CHECK (Price >= 0)
         );""",
-
-        # PortfolioHasStock table (relationship table)
+        
+        # PortfolioHasStock table
         f"""CREATE TABLE `{table_prefix}PortfolioHasStock` (
             PortfolioID INT,
             StockID INT,
             PRIMARY KEY (PortfolioID, StockID)
         );""",
-
-        # AllocationHasStock table (relationship table)
+        
+        # AllocationHasStock table
         f"""CREATE TABLE `{table_prefix}AllocationHasStock` (
             AllocID INT,
             StockID INT,
             PRIMARY KEY (AllocID, StockID)
         );""",
-
-        # StockHasHistory table (relationship table)
+        
+        # StockHasHistory table
         f"""CREATE TABLE `{table_prefix}StockHasHistory` (
             StockID INT,
             HistoryID INT,
             PRIMARY KEY (StockID, HistoryID)
         );""",
-
-        # Data view (combines Stocks and History tables)
+        
+        # Data view
         f"""CREATE VIEW `{table_prefix}Data` AS
             SELECT s.Ticker, h.Date, h.Price
             FROM `{table_prefix}Stocks` s
             JOIN `{table_prefix}History` h ON s.Ticker = h.Ticker;"""
     ]
-
-    # sql_statements.extend([
-    #     f"CREATE INDEX idx_{table_prefix}Stocks_Ticker ON `{table_prefix}Stocks` (Ticker);",
-    #     f"CREATE INDEX idx_{table_prefix}History_Ticker_Date ON `{table_prefix}History` (Ticker, Date);",
-    #     f"CREATE INDEX idx_{table_prefix}Allocation_Ticker ON `{table_prefix}Allocation` (Ticker);"
-    # ])
 
     try:
         # Execute each SQL statement
@@ -94,9 +88,9 @@ def cleanup_session_tables(connection, cursor, session_id):
     Remove session-specific tables and views from the database.
 
     Args:
-    connection: MySQL database connection object
-    cursor: MySQL cursor object
-    session_id: Unique identifier for the current session
+        connection: MySQL database connection object
+        cursor: MySQL cursor object
+        session_id: Unique identifier for the current session
     """
     table_prefix = f"session_{session_id}_"
 

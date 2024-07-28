@@ -3,7 +3,6 @@ import pandas as pd
 import yfinance as yf
 import logging
 from contextlib import closing
-
 from connect import connect_to_database, close_connection
 from db_setup import create_session_tables, cleanup_session_tables
 from get_sh import get_stock, fetch_data, ticker_exists
@@ -16,7 +15,12 @@ from ef import (
 )
 
 def get_valid_tickers():
-    """Get and validate stock ticker symbols from user input."""
+    """
+    Get and validate stock ticker symbols from user input.
+
+    Returns:
+        list: A list of valid stock ticker symbols.
+    """
     while True:
         tickers_input = input("Enter the stock ticker symbols (separated by commas), or 'quit' to exit: ").strip()
         if tickers_input.lower() == 'quit':
@@ -37,7 +41,12 @@ def get_valid_tickers():
         return valid_tickers
 
 def get_investment_amount():
-    """Get the total investment amount from user input."""
+    """
+    Get the total investment amount from user input.
+
+    Returns:
+        float: The total investment amount.
+    """
     while True:
         try:
             return float(input("Enter the total investment amount: "))
@@ -45,7 +54,14 @@ def get_investment_amount():
             print("Invalid investment amount. Please enter a valid number.")
 
 def process_allocation_data(connection, session_id, investment_amount):
-    """Fetch, scale, and print allocation data."""
+    """
+    Fetch, scale, and print allocation data.
+
+    Args:
+        connection: Database connection object.
+        session_id (str): Unique identifier for the current session.
+        investment_amount (float): Total investment amount.
+    """
     try:
         allocation_df = fetch_allocation_data(connection, session_id)
         allocation_df = scale_allocation_by_investment(allocation_df, investment_amount)
@@ -60,7 +76,14 @@ def process_allocation_data(connection, session_id, investment_amount):
         print(f"An error occurred while fetching or printing allocation data: {e}")
 
 def cleanup_and_close(connection, cursor, session_id):
-    """Clean up session tables and close database connection."""
+    """
+    Clean up session tables and close database connection.
+
+    Args:
+        connection: Database connection object.
+        cursor: Database cursor object.
+        session_id (str): Unique identifier for the current session.
+    """
     try:
         cleanup_session_tables(connection, cursor, session_id)
     except Exception as cleanup_error:
@@ -68,50 +91,10 @@ def cleanup_and_close(connection, cursor, session_id):
     finally:
         close_connection(connection, cursor)
 
-# def main():
-#     # Connect to the database and generate a unique session ID
-#     connection, cursor = connect_to_database()
-#     session_id = uuid.uuid4()
-
-#     if connection:
-#         try:
-#             # Set up session tables in the database
-#             create_session_tables(connection, cursor, session_id)
-
-#             # Get valid stock tickers from user input
-#             valid_tickers = get_valid_tickers()
-
-#             # Get investment amount from user input
-#             investment_amount = get_investment_amount()
-
-#             # Fetch stock data and calculate efficient frontier
-#             get_stock(connection, cursor, valid_tickers, session_id)
-#             data = fetch_data(connection, session_id)
-#             results, weights_record, df = calculate_efficient_frontier(data)
-
-#             # Store allocation data in the database
-#             store_allocation(connection, cursor, weights_record, results, df, session_id)
-
-#             # Fetch and process allocation data
-#             process_allocation_data(connection, session_id, investment_amount)
-
-#         except ValueError as ve:
-#             print(f"Input error: {ve}")
-#         except Exception as e:
-#             print(f"An error occurred: {e}")
-#         finally:
-#             # Clean up session tables and close database connection
-#             cleanup_and_close(connection, cursor, session_id)
-#     else:
-#         print("Failed to connect to the database. Exiting program.")
-
-# if __name__ == "__main__":
-#     main()
-
-
-from contextlib import closing
-
 def main():
+    """
+    Main function to run the portfolio optimization process.
+    """
     # Connect to the database and generate a unique session ID
     connection_tuple = connect_to_database()
     
