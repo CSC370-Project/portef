@@ -2,6 +2,8 @@
 
 This Python program calculates an efficient frontier for a given set of stocks using Monte Carlo simulation and provides an optimal portfolio allocation based on the Sharpe ratio.
 
+Note that I have since shut down the AWS database to sotp unwanted charges - the program should be usable locally with corresponding edits to [connect.py](https://github.com/CSC370-Project/portef/blob/main/connect.py)
+
 ## Required Packages and Programs
 
 1. Python 3.7+
